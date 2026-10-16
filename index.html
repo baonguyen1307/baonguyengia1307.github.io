@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>zero2one – Bù rau</title>
+<style>
+:root{--bg:#fbf7f0;--card:#fff;--text:#2a2118;--muted:#7a6c5d;--line:#e6dccd;--accent:#e8590c;--accent-t:#fff;--ok:#2b8a3e;--okbg:#e6f4ea;--rm:#c92a2a;--rmbg:#fdecec;--warnbg:#fff4d6;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1b1713;--card:#272019;--text:#f3ebe0;--muted:#a89a8a;--line:#3a3128;--accent:#ff8a4c;--accent-t:#1b1713;--ok:#69db7c;--okbg:#1d3324;--rm:#ff8787;--rmbg:#3a1f1f;--warnbg:#3a321a}}
+:root[data-theme="dark"]{--bg:#1b1713;--card:#272019;--text:#f3ebe0;--muted:#a89a8a;--line:#3a3128;--accent:#ff8a4c;--accent-t:#1b1713;--ok:#69db7c;--okbg:#1d3324;--rm:#ff8787;--rmbg:#3a1f1f;--warnbg:#3a321a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:17px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-tap-highlight-color:transparent}
+header{padding:16px 16px 6px;max-width:560px;margin:0 auto}
+h1{margin:0;font-size:22px}
+.sub{color:var(--muted);font-size:14px;margin-top:2px}
+main{padding:0 16px 40px;max-width:560px;margin:0 auto}
+h2{font-size:14px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:18px 0 8px}
+.seg{display:grid;grid-template-columns:1fr 1fr;background:var(--line);border-radius:14px;padding:4px;gap:4px}
+.seg button{border:0;border-radius:11px;padding:12px;font:inherit;font-weight:700;background:transparent;color:var(--muted);cursor:pointer}
+.seg button.on{background:var(--accent);color:var(--accent-t)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{background:var(--card);color:var(--text);border:2px solid var(--line);border-radius:14px;padding:14px 10px;font:inherit;font-weight:700;text-align:left;min-height:72px;cursor:pointer}
+.btn small{display:block;color:var(--muted);font-weight:400;font-size:13px;margin-top:2px}
+.btn.on{border-color:var(--rm);background:var(--rmbg)}
+.btn.on::before{content:"✕ ";color:var(--rm)}
+.only{width:100%;margin-top:10px;min-height:60px;border-style:dashed}
+.only.on{border-color:var(--accent);background:var(--warnbg)}
+.only.on::before{content:"✓ ";color:var(--accent)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px}
+.big{font-size:22px;font-weight:800;margin:0}
+.res-ok{border:2px solid var(--ok);background:var(--okbg)}
+.res-warn{border:2px solid var(--accent);background:var(--warnbg)}
+.muted{color:var(--muted);font-size:14px;margin-top:6px}
+.clear{width:100%;padding:14px;border-radius:14px;border:0;background:var(--accent);color:var(--accent-t);font:inherit;font-weight:700;cursor:pointer}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th{font-size:12px;color:var(--muted);text-align:right;padding:4px;font-weight:600}th:first-child{text-align:left}
+td{padding:7px 4px;border-bottom:1px solid var(--line);text-align:right}td:first-child{text-align:left;font-weight:600}
+tr:last-child td{border-bottom:0;font-weight:800}
+</style>
+</head>
+<body>
+<header>
+<h1>🥗 Bù rau – Walking Taco</h1>
+<div class="sub">Khách không ăn rau nào? Bấm vào rau đó.</div>
+</header>
+<main>
+<h2>Cỡ phần</h2>
+<div class="seg" id="size"></div>
+
+<h2>Khách KHÔNG ăn</h2>
+<div class="grid" id="grid"></div>
+<button class="btn only" id="only">Khách chỉ lấy bắp</button>
+
+<h2>Cách làm</h2>
+<div id="result"></div>
+
+<h2>Định lượng chuẩn</h2>
+<div class="card"><table id="std"></table></div>
+</main>
+
+<script>
+/* ===== DATA – chỉnh ở đây =====
+ g: [phần nhỏ, phần lớn] gram | c: [giá vốn nhỏ, giá vốn lớn] đồng */
+const VEG = {
+  "Ớt chuông": {g:[25,30],  c:[441,529]},
+  "Cà chua":   {g:[15,20],  c:[600,800]},
+  "Cải trắng": {g:[40,60],  c:[1200,1800]},
+  "Cải tím":   {g:[15,25],  c:[900,1500]},
+  "Bắp":       {g:[15,20],  c:[750,1000]},
+  "Xà lách":   {g:[15,20],  c:[643,857]}
+};
+/* no: bỏ ĐÚNG tổ hợp rau này | one: bỏ 1 TRONG các rau này | bỏ 1 loại rau khác = KHÔNG BÙ */
+const RULES = [
+  {no:["Cà chua","Ớt chuông"], do:"ĐỔI 1 MUỖNG BẮP"},
+  {one:["Bắp","Cải tím"],       do:"ĐỔI 1 MUỖNG ỚT CHUÔNG"}
+];
+/* Khách chỉ lấy bắp: [phần nhỏ, phần lớn] gram */
+const ONLY_CORN = [85,120];
+/* ===== hết DATA ===== */
+
+let size = 0, only = false;
+const sel = new Set();
+const $ = id => document.getElementById(id);
+const vnd = n => n.toLocaleString("vi-VN") + " đ";
+const same = (a,b) => a.length===b.length && a.every(x=>b.includes(x));
+
+function render(){
+  $("size").innerHTML = ["Phần nhỏ","Phần lớn"].map((t,i)=>`<button class="${size===i?'on':''}" data-s="${i}">${t}</button>`).join("");
+  $("grid").innerHTML = Object.keys(VEG).map(k=>`<button class="btn ${sel.has(k)?'on':''}" data-k="${k}">${k}<small>${VEG[k].g[size]} g · ${vnd(VEG[k].c[size])}</small></button>`).join("");
+  $("only").className = "btn only" + (only?" on":"");
+  const rows = Object.entries(VEG);
+  const tg = rows.reduce((s,[,v])=>s+v.g[size],0), tc = rows.reduce((s,[,v])=>s+v.c[size],0);
+  $("std").innerHTML = `<tr><th>Rau</th><th>Gram</th><th>Giá vốn</th></tr>` + rows.map(([k,v])=>`<tr><td>${k}</td><td>${v.g[size]} g</td><td>${vnd(v.c[size])}</td></tr>`).join("") + `<tr><td>Tổng</td><td>${tg} g</td><td>${vnd(tc)}</td></tr>`;
+
+  let h = "";
+  if(only){
+    h = `<div class="card res-ok"><p class="big">${ONLY_CORN[size]} g bắp</p><div class="muted">Khách chỉ lấy bắp – ${size?'phần lớn':'phần nhỏ'}.</div></div>`;
+  } else if(sel.size===0){
+    h = `<div class="card muted" style="text-align:center">Chưa chọn rau nào.</div>`;
+  } else if(sel.size===1){
+    const k = [...sel][0], r1 = RULES.find(x=>x.one&&x.one.includes(k));
+    h = r1 ? `<div class="card res-ok"><p class="big">${r1.do}</p><div class="muted">Bỏ ${k}.</div></div>`
+          : `<div class="card res-ok"><p class="big">KHÔNG BÙ</p><div class="muted">Bỏ ${k} – cứ múc các loại còn lại như bình thường.</div></div>`;
+  } else {
+    const arr = [...sel], r = RULES.find(x=>x.no&&same(x.no,arr));
+    h = r ? `<div class="card res-ok"><p class="big">${r.do}</p><div class="muted">Bỏ ${arr.join(" + ")}.</div></div>`
+          : `<div class="card res-warn"><p class="big">Chưa có quy tắc</p><div class="muted">Tổ hợp ${arr.join(" + ")} chưa có trong bảng – hỏi quản lý.</div></div>`;
+  }
+  if(only||sel.size) h += `<button class="clear" id="clr">Đơn mới / xoá chọn</button>`;
+  $("result").innerHTML = h;
+  if($("clr")) $("clr").onclick = ()=>{sel.clear();only=false;render()};
+}
+$("size").onclick = e=>{const b=e.target.closest("button");if(!b)return;size=+b.dataset.s;render()};
+$("grid").onclick = e=>{const b=e.target.closest(".btn");if(!b)return;only=false;const k=b.dataset.k;sel.has(k)?sel.delete(k):sel.add(k);render()};
+$("only").onclick = ()=>{only=!only;sel.clear();render()};
+render();
+</script>
+</body>
+</html>
